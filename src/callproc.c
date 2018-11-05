@@ -1258,7 +1258,9 @@ child_setup (int in, int out, int err, char **new_argv, bool set_pgrp,
     register char **new_env;
     char **p, **q;
     register int new_length;
+#ifdef HAVE_X_WINDOWS
     Lisp_Object display = Qnil;
+#endif
 
     new_length = 0;
 
@@ -1266,14 +1268,17 @@ child_setup (int in, int out, int err, char **new_argv, bool set_pgrp,
 	 CONSP (tem) && STRINGP (XCAR (tem));
 	 tem = XCDR (tem))
       {
+#ifdef HAVE_X_WINDOWS
 	if (strncmp (SSDATA (XCAR (tem)), "DISPLAY", 7) == 0
 	    && (SDATA (XCAR (tem)) [7] == '\0'
 		|| SDATA (XCAR (tem)) [7] == '='))
 	  /* DISPLAY is specified in process-environment.  */
 	  display = Qt;
+#endif
 	new_length++;
       }
 
+#ifdef HAVE_X_WINDOWS
     /* If not provided yet, use the frame's DISPLAY.  */
     if (NILP (display))
       {
@@ -1288,6 +1293,7 @@ child_setup (int in, int out, int err, char **new_argv, bool set_pgrp,
 	    new_length++;
 	  }
       }
+#endif
 
     /* new_length + 2 to include PWD and terminating 0.  */
     if (MAX_ALLOCA / sizeof *env - 2 < new_length)
@@ -1298,6 +1304,7 @@ child_setup (int in, int out, int err, char **new_argv, bool set_pgrp,
     if (egetenv ("PWD"))
       *new_env++ = pwd_var;
 
+#ifdef HAVE_X_WINDOWS
     if (STRINGP (display))
       {
 	if (MAX_ALLOCA - sizeof "DISPLAY=" < SBYTES (display))
@@ -1306,6 +1313,7 @@ child_setup (int in, int out, int err, char **new_argv, bool set_pgrp,
 	lispstpcpy (stpcpy (vdata, "DISPLAY="), display);
 	new_env = add_env (env, new_env, vdata);
       }
+#endif
 
     /* Overrides.  */
     for (tem = Vprocess_environment;
