@@ -1367,9 +1367,13 @@ Note that the style variables are always made local to the buffer."
 		      (c-clear-syn-tab (1- (point)))
 		      (not (memq (char-before) c-string-delims)))))
 	       (memq (char-before) c-string-delims))
-	     (progn
-	       (c-pps-to-string-delim (point-max))
-	       (< (point) (point-max))))))
+             (if (eq (char-before (1- (point)))
+                     c-multiline-string-start-char)
+		 (progn
+		   (c-pps-to-string-delim (point-max))
+		   (< (point) (point-max)))
+               (c-pps-to-string-delim (c-point 'eoll))
+               (< (point) (c-point 'eoll))))))
       (setq c-new-END (max (point) c-new-END)))
 
      (c-multiline-string-start-char
